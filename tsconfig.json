@@ -7,6 +7,14 @@
     "strict": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
+    "paths": {
+      "input-mask": [
+        "./dist/input-mask"
+      ],
+      "ngx-input-mask": [
+        "./dist/ngx-input-mask"
+      ]
+    },
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
