@@ -1,5 +1,5 @@
 import { Component, forwardRef } from '@angular/core';
-import { FormControl, FormsModule, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormsModule, NG_VALUE_ACCESSOR, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -23,7 +23,7 @@ import { InputMaskDirective } from '../directives/input-mask.directive';
 })
 export class CustomInputComponent {
 
-  testCtrl: FormControl = new FormControl();
+  testCtrl: FormControl = new FormControl(null, [Validators.required, Validators.min(5)]);
 
   constructor() { 
 
@@ -35,10 +35,15 @@ export class CustomInputComponent {
   }
 
   testFn(value: string): string {
-  console.log("🚀 ~ CustomInputComponent ~ testFn ~ value:", value)
 
     const numberValue = parseFloat(value);
-    return isNaN(numberValue) ? '$0.00' : `$${numberValue.toFixed(2)}`;
+    if (isNaN(numberValue)) {
+      return '$0.00';
+    }
+
+    // Format number with commas
+    const formattedNumber = numberValue.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return `$${formattedNumber}`;
   }
 }
 

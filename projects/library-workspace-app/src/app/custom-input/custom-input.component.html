@@ -9,6 +9,15 @@
     <mat-form-field appearance="outline">
         <mat-label>Input Mask</mat-label>
         <input matInput placeholder="Test" [formControl]="testCtrl" inputMask [formatCallback]="testFn" [numericOnly]="true" />
+        
+
+        @if(testCtrl.hasError('required')) {
+            <mat-error>This field is required</mat-error>
+        }
+        @if(testCtrl.hasError('min')) {
+            <mat-error>min error</mat-error>
+        }
+       
     </mat-form-field>
 </div>
 
