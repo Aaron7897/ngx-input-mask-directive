@@ -37,16 +37,23 @@ export class InputMaskDirective implements ControlValueAccessor {
       
     const charCode = event.key.charCodeAt(0);
     
+    // Allow only numbers and decimal point
     if (charCode !== 46 && (charCode < 48 || charCode > 57)) {
       event.preventDefault();
     }
 
-    // if raw value already has 2 decimals
-    if (this.rawValue.includes('.') && this.rawValue.split('.')[1].length >= 2) {
+    // check where cursor is and if there is a decimal point
+    const cursorPosition = this.el.nativeElement.selectionStart;
+    console.log("🚀 ~ InputMaskDirective ~ onKeyPress ~ cursorPosition:", cursorPosition)
+    const hasDecimalPoint = this.rawValue.includes('.');
+    
+    // if cursor is after the decimal point, prevent more than 2 decimal characters
+    if (hasDecimalPoint && cursorPosition > this.rawValue.indexOf('.') && this.rawValue.split('.')[1].length >= 2) {
       event.preventDefault();
     }
 
-    // Prevent more than 2 decimal points
+  
+    // Prevent more than 2 decimal characters
     if (charCode === 46 && this.rawValue.includes('.')) {
       event.preventDefault();
     }
@@ -93,7 +100,8 @@ export class InputMaskDirective implements ControlValueAccessor {
       return;
     };
 
-    this.rawValue = pastedText;
+    // if more than 2 digits after decimal point, remove the rest
+    this.rawValue = pastedText.includes('.') ? pastedText.split('.')[0] + '.' + pastedText.split('.')[1].slice(0, 2) : pastedText;
 
     this.formattedValue = this.formatCallback(pastedText);
     

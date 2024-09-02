@@ -1,14 +1,14 @@
 <div>
     <mat-form-field appearance="outline">
         <mat-label>testing</mat-label>
-        <input matInput placeholder="Test"/>
+        <input type="number" matInput placeholder="Test"/>
     </mat-form-field>
 </div>
 
 <div>
     <mat-form-field appearance="outline">
         <mat-label>Input Mask</mat-label>
-        <input matInput placeholder="Test" [formControl]="testCtrl" inputMask [formatCallback]="testFn" [numericOnly]="true" />
+        <input class="right" matInput placeholder="Test" [formControl]="testCtrl" inputMask [formatCallback]="testFn" [numericOnly]="true" />
         
 
         @if(testCtrl.hasError('required')) {
