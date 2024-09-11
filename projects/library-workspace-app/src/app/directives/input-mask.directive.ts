@@ -76,7 +76,7 @@ export class NumericInputMaskDirective implements ControlValueAccessor {
     
     const input = event.target as HTMLInputElement;
 
-    this.removeConfigValues(input.value);
+    input.value = this.removeConfigValues(input.value);
 
     if(isNaN(+input.value)) {
       input.value.replace(/[^\d.]/g, '');
@@ -104,7 +104,7 @@ export class NumericInputMaskDirective implements ControlValueAccessor {
     const clipboardData: DataTransfer = event.clipboardData || (window as any).clipboardData;
     let pastedText = clipboardData.getData('text');
 
-   this.removeConfigValues(pastedText);
+    pastedText = this.removeConfigValues(pastedText);
 
     // Prevent the default paste action
     event.preventDefault();
