@@ -4,6 +4,24 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 type FormatCallback = (value: string) => string;
 
+type InputMaskConfig = {
+
+  prefix: string;
+  suffix: string;
+  decimalPoint: string;
+  decimalPlaces: number;
+  separator: string;
+
+}
+const DEFAULT_INPUT_MASK_CONFIG: InputMaskConfig = {
+  prefix: "$",
+  suffix: "",
+  decimalPoint: ".",
+  decimalPlaces: 2,
+  separator: ","
+
+}
+
 @Directive({
   selector: 'input[inputMask]',
   standalone: true,
@@ -18,7 +36,9 @@ type FormatCallback = (value: string) => string;
 export class InputMaskDirective implements ControlValueAccessor {
 
   @Input() formatCallback: FormatCallback = (value) => value;
-  @Input() numericOnly: boolean = false;
+  @Input('numericOnly') isNumericOnly: boolean = false;
+
+  config: InputMaskConfig = DEFAULT_INPUT_MASK_CONFIG;
 
   private rawValue: string = '';
   private formattedValue: string = '';
@@ -33,76 +53,102 @@ export class InputMaskDirective implements ControlValueAccessor {
   @HostListener('keypress', ['$event'])
   onKeyPress(event: KeyboardEvent) {
     
-    if (!this.numericOnly) return;
+    if (!this.isNumericOnly) return;
       
     const charCode = event.key.charCodeAt(0);
+    console.log("🚀 ~ InputMaskDirective ~ onKeyPress ~ charCode:", charCode)
     
+    const decimalPoint = this.config.decimalPoint;
+    const decimalPointCode = decimalPoint.charCodeAt(0);
+    const separatorCode = this.config.separator.charCodeAt(0);
+
+
+    const isNumber = charCode >= 48 && charCode <= 57;
+
+    const isDecimalPoint = charCode === decimalPointCode;
+    const isSeparator = charCode === separatorCode;
+
     // Allow only numbers and decimal point
-    if (charCode !== 46 && (charCode < 48 || charCode > 57)) {
+    if (!(isNumber || isDecimalPoint || isSeparator)) {
       event.preventDefault();
     }
 
-    // check where cursor is and if there is a decimal point
     const cursorPosition = this.el.nativeElement.selectionStart;
-    console.log("🚀 ~ InputMaskDirective ~ onKeyPress ~ cursorPosition:", cursorPosition)
-    const hasDecimalPoint = this.rawValue.includes('.');
+    const hasDecimalPoint = this.rawValue.includes(decimalPoint);
     
     // if cursor is after the decimal point, prevent more than 2 decimal characters
-    if (hasDecimalPoint && cursorPosition > this.rawValue.indexOf('.') && this.rawValue.split('.')[1].length >= 2) {
+    const isCursorAfterDecimal = hasDecimalPoint && cursorPosition > this.rawValue.indexOf(decimalPoint);
+    const hasMoreThanSpecifiedDecimalPlaces = this.rawValue.split(decimalPoint)[1]?.length >= this.config.decimalPlaces;
+
+    if (isCursorAfterDecimal && hasMoreThanSpecifiedDecimalPlaces) {
       event.preventDefault();
     }
 
-  
-    // Prevent more than 2 decimal characters
-    if (charCode === 46 && this.rawValue.includes('.')) {
+    // Prevent more than one decimal points
+    if (charCode === decimalPointCode && this.rawValue.includes(decimalPoint)) {
       event.preventDefault();
     }
-    
     
   }
 
 
   @HostListener('input', ['$event'])
   onInput(event: Event) {
-    
+    console.log('Inputting...', (event.target as any).value);
+
     const input = event.target as HTMLInputElement;
 
-    if(this.numericOnly && isNaN(+input.value)) {
-      input.value.replace(/[^\d.]/g, '');
-      return;
-    }
+    if(this.isNumericOnly) {
 
-    this.rawValue = this.numericOnly ? input.value.replace(/^0+/, '') :  input.value;
+      if(isNaN(+input.value)) {
+        input.value.replace(/[^\d.]/g, '');
+        return;
+      }
+
+      this.rawValue = input.value.replace(/[^\d.]/g, '');
+
+    } else {
+      this.rawValue = input.value;
+    }
 
     this.formattedValue = this.formatCallback(this.rawValue);
 
     if (this.onChange) {
-      this.onChange(this.numericOnly ? +this.rawValue : this.rawValue);
+      this.onChange(this.isNumericOnly ? +this.rawValue : this.rawValue);
     }
   }
 
   @HostListener('paste', ['$event'])
   onPaste(event: ClipboardEvent) {
-
+    
     // If the input is not numeric, do nothing
-    if(!this.numericOnly) return;
+    if(!this.isNumericOnly) return;
 
     const clipboardData = event.clipboardData || (window as any).clipboardData;
     let pastedText = clipboardData.getData('text');
 
-    // Remove commas from the pasted text
-    pastedText = pastedText.replace(/,/g, '');
+    // Remove separator from the pasted text
+    pastedText = pastedText.replace(this.config.separator, '');
+    pastedText = pastedText.replace(this.config.prefix, '');
+    pastedText = pastedText.replace(this.config.suffix, '');
 
     // Prevent the default paste action
     event.preventDefault();
 
+    // if pasted text is still not a number, do nothing
     if(isNaN(+pastedText)) {
       return;
     };
 
-    // if more than 2 digits after decimal point, remove the rest
-    this.rawValue = pastedText.includes('.') ? pastedText.split('.')[0] + '.' + pastedText.split('.')[1].slice(0, 2) : pastedText;
-
+    // if more than specified digits after decimal point, remove the rest
+    const decimalPoint = this.config.decimalPoint;
+    const decimalPlaces = this.config.decimalPlaces;
+    if(pastedText.includes(decimalPoint)) {
+      this.rawValue = pastedText.split(decimalPoint)[0] + '.' + pastedText.split(decimalPoint)[1].slice(0, decimalPlaces);
+    } else {
+      this.rawValue = pastedText;
+    }
+    
     this.formattedValue = this.formatCallback(pastedText);
     
     // Set the cleaned value to the input
@@ -135,7 +181,7 @@ export class InputMaskDirective implements ControlValueAccessor {
   }
 
   writeValue(value: string): void {
-    if(this.numericOnly && isNaN(+value)) {
+    if(this.isNumericOnly && isNaN(+value)) {
       throw new Error('Value must be a number');
     }
 
@@ -155,4 +201,6 @@ export class InputMaskDirective implements ControlValueAccessor {
     this.el.nativeElement.disabled = isDisabled;
   }
 
+
+  
 }
