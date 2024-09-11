@@ -4,7 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { InputMaskDirective } from '../directives/input-mask.directive';
+import { NumericInputMaskDirective } from '../directives/input-mask.directive';
 
 @Component({
   selector: 'custom-input',
@@ -15,7 +15,7 @@ import { InputMaskDirective } from '../directives/input-mask.directive';
     FormsModule, 
     MatButtonModule, 
     MatIconModule,
-    InputMaskDirective,
+    NumericInputMaskDirective,
     ReactiveFormsModule
   ],
   templateUrl: './custom-input.component.html',
@@ -23,7 +23,7 @@ import { InputMaskDirective } from '../directives/input-mask.directive';
 })
 export class CustomInputComponent {
 
-  testCtrl: FormControl = new FormControl(null, [Validators.required, Validators.min(5)]);
+  testCtrl: FormControl = new FormControl(null, [Validators.required]);
 
   constructor() { 
 

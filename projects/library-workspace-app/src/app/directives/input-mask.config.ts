@@ -1,6 +1,6 @@
 import { InjectionToken } from "@angular/core";
 
-export type InputMaskConfig = {
+export type NumericInputMaskConfig = {
 
     prefix: string;
     suffix: string;
@@ -10,14 +10,14 @@ export type InputMaskConfig = {
   
 }
 
-export const DEFAULT_INPUT_MASK_CONFIG: InputMaskConfig = {
+export const DEFAULT_NUMERIC_INPUT_MASK_CONFIG: NumericInputMaskConfig = {
     prefix: "$",
     suffix: "",
     decimalPoint: ".",
-    decimalPlaces: 2,
+    decimalPlaces: 5,
     separator: ","
   
 }
 
 // injection token
-export const INPUT_MASK_CONFIG = new InjectionToken<InputMaskConfig>('INPUT_MASK_CONFIG');
+export const NUMERIC_INPUT_MASK_CONFIG = new InjectionToken<NumericInputMaskConfig>('NUMERIC_INPUT_MASK_CONFIG');

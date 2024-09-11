@@ -8,7 +8,7 @@
 <div>
     <mat-form-field appearance="outline">
         <mat-label>Input Mask</mat-label>
-        <input class="right" matInput placeholder="Test" [formControl]="testCtrl" inputMask [formatCallback]="testFn" [numericOnly]="true" />
+        <input class="right" matInput  [formControl]="testCtrl" inputMask />
         
 
         @if(testCtrl.hasError('required')) {
