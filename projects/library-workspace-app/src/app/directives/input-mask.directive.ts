@@ -19,18 +19,9 @@ type FormatCallback = (value: string | null) => string;
 export class NumericInputMaskDirective implements ControlValueAccessor {
 
   private readonly config: NumericInputMaskConfig = DEFAULT_NUMERIC_INPUT_MASK_CONFIG;
+  private readonly zeroString = '0';
 
-  private _rawValue: string | null = null;
-
-  private set rawValue(value: string | null)  {
-    console.log("SETTER", value);
-    this._rawValue = value;
-  };
-
-  private get rawValue(): string | null {
-    return this._rawValue;
-  }
-
+  private rawValue: string | null = null;
   private formattedValue: string = '';
 
   private onChange: ((value: string | number | null) => void | undefined) | undefined;
@@ -89,8 +80,12 @@ export class NumericInputMaskDirective implements ControlValueAccessor {
       input.value.replace(/[^\d.]/g, '');
       return;
     }
+
     // removes all leading zeros unless the input is all zeros
-    this.rawValue = input.value.replace(/^0+(?=\d)/, '');
+    const valueWithoutLeadingZeros =  input.value.replace(/^0+(?=\d)/, '');
+
+    // if the input is blank, set the raw value to null
+    this.rawValue = valueWithoutLeadingZeros == '' ? null : valueWithoutLeadingZeros;
 
     this.formattedValue = this.formatNumber(this.rawValue);
 
@@ -124,7 +119,7 @@ export class NumericInputMaskDirective implements ControlValueAccessor {
 
     if(pastedText.includes(decimalPoint)) {
       // if more than specified digits after decimal point, remove the rest
-      const rawString = this.removeExtraDecimalPlaces(pastedText);
+      const rawString = this.handleDecimalPlaces(pastedText);
       this.rawValue = rawString;
     } else {
       this.rawValue = pastedText;
@@ -198,31 +193,19 @@ export class NumericInputMaskDirective implements ControlValueAccessor {
 
     const numberValue = parseFloat(value);
     if (isNaN(numberValue)) {
-      return this.formatNumber('0');
+      return this.formatNumber(this.zeroString);
     }
 
     // remove extra decimal places
-    value = this.removeExtraDecimalPlaces(value);
+    value = this.handleDecimalPlaces(value);
     console.log("🐬 -- NumericInputMaskDirective -- value22:", value)
 
 
     value = this.addSeparators(value);
 
-    if(value.includes(decimalPoint)) {
-      const parts = value.split(decimalPoint);
-      const integerPart = parts[0];
-      const decimalPart = parts[1];
-
-      if(integerPart.length === 0) {
-        value = `0${value}`;
-      }
-    }
-
     const formattedNumber = `${prefix}${value}${suffix}`
       
     console.log("🐬 -- NumericInputMaskDirective -- formattedNumber:", formattedNumber)
-
-
     
     return formattedNumber;
 
@@ -240,7 +223,7 @@ export class NumericInputMaskDirective implements ControlValueAccessor {
     return decimalPart ? `${integerPartWithSeparator}${this.config.decimalPoint}${decimalPart}` : integerPartWithSeparator;
   }
 
-  private removeExtraDecimalPlaces(value: string): string {
+  private handleDecimalPlaces(value: string): string {
     const decimalPoint = this.config.decimalPoint;
     const decimalPlaces = this.config.decimalPlaces;
 
@@ -248,6 +231,12 @@ export class NumericInputMaskDirective implements ControlValueAccessor {
     const parts = value.split(decimalPoint);
     if(parts[1]?.length > decimalPlaces) {
       parts[1] = parts[1].substring(0, decimalPlaces);
+    }
+
+    if(!parts[1] || parts[1].length < decimalPlaces) {
+      parts[1] = parts[1] ?? '';
+      const missingZeros = decimalPlaces - parts[1].length;
+      parts[1] = parts[1] + this.zeroString.repeat(missingZeros);
     }
 
     return parts.join(decimalPoint);
