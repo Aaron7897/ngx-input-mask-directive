@@ -76,6 +76,8 @@ export class NumericInputMaskDirective implements ControlValueAccessor {
     
     const input = event.target as HTMLInputElement;
 
+    this.removeConfigValues(input.value);
+
     if(isNaN(+input.value)) {
       input.value.replace(/[^\d.]/g, '');
       return;
@@ -102,10 +104,7 @@ export class NumericInputMaskDirective implements ControlValueAccessor {
     const clipboardData: DataTransfer = event.clipboardData || (window as any).clipboardData;
     let pastedText = clipboardData.getData('text');
 
-    // Remove separator from the pasted text
-    pastedText = pastedText.replace(this.config.separator, '');
-    pastedText = pastedText.replace(this.config.prefix, '');
-    pastedText = pastedText.replace(this.config.suffix, '');
+   this.removeConfigValues(pastedText);
 
     // Prevent the default paste action
     event.preventDefault();
@@ -153,13 +152,10 @@ export class NumericInputMaskDirective implements ControlValueAccessor {
   @HostListener('focus', ['$event'])
   onFocus(event: Event) {
     const input = event.target as HTMLInputElement;
-
-    console.log(this.rawValue);
-
     input.value = this.rawValue ?? '';
   }
 
-  writeValue(value: string |  null): void {
+  writeValue(value: string | null): void {
 
     if(value !== null && isNaN(+value)) {
       throw new Error('Value must be a number');
@@ -185,9 +181,7 @@ export class NumericInputMaskDirective implements ControlValueAccessor {
   private formatNumber: FormatCallback = (value: string | null) => {
     
     const prefix = this.config.prefix;
-    const decimalPoint = this.config.decimalPoint;
     const suffix = this.config.suffix;
-    const separator = this.config.separator;
 
     if(value === null) return '';
 
@@ -198,17 +192,21 @@ export class NumericInputMaskDirective implements ControlValueAccessor {
 
     // remove extra decimal places
     value = this.handleDecimalPlaces(value);
-    console.log("🐬 -- NumericInputMaskDirective -- value22:", value)
-
-
     value = this.addSeparators(value);
 
+
     const formattedNumber = `${prefix}${value}${suffix}`
-      
-    console.log("🐬 -- NumericInputMaskDirective -- formattedNumber:", formattedNumber)
-    
+          
     return formattedNumber;
 
+  }
+
+  private removeConfigValues(value: string): string {
+    const prefix = this.config.prefix;
+    const suffix = this.config.suffix;
+    const separator = this.config.separator;
+
+    return value.replace(prefix, '').replace(suffix, '').replace(separator, '');
   }
 
   private addSeparators(value: string): string {
@@ -233,6 +231,7 @@ export class NumericInputMaskDirective implements ControlValueAccessor {
       parts[1] = parts[1].substring(0, decimalPlaces);
     }
 
+    // add zeros if there are less than specified decimal places
     if(!parts[1] || parts[1].length < decimalPlaces) {
       parts[1] = parts[1] ?? '';
       const missingZeros = decimalPlaces - parts[1].length;
